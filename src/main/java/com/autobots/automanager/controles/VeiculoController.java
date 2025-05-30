@@ -2,48 +2,79 @@ package com.autobots.automanager.controles;
 
 import com.autobots.automanager.entidades.Veiculo;
 import com.autobots.automanager.repositorios.VeiculoRepository;
+import com.autobots.automanager.servicos.AdicionarLinkVeiculoServico;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/veiculos")
+@RequestMapping("/veiculo")
 public class VeiculoController {
 
-    @Autowired
-    private VeiculoRepository veiculoRepository;
+  @Autowired
+  private VeiculoRepository veiculoRepository;
 
-    @PostMapping
-    public Veiculo criarVeiculo(@RequestBody Veiculo veiculo) {
-        return veiculoRepository.save(veiculo);
+  @Autowired
+  private AdicionarLinkVeiculoServico adicionarLink;
+
+  @PostMapping("/cadastro")
+  public ResponseEntity<Veiculo> criarVeiculo(@RequestBody Veiculo veiculo) {
+    Veiculo novoVeiculo = veiculoRepository.save(veiculo);
+    adicionarLink.adicionarLink(novoVeiculo);
+    return ResponseEntity.ok(novoVeiculo);
+  }
+
+  @GetMapping("/listar")
+  public ResponseEntity<List<Veiculo>> listarVeiculos() {
+    List<Veiculo> veiculos = veiculoRepository.findAll();
+    if (veiculos.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+    adicionarLink.adicionarLink(veiculos);
+    return ResponseEntity.ok(veiculos);
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<Veiculo> obterVeiculo(@PathVariable Long id) {
+    Optional<Veiculo> veiculo = veiculoRepository.findById(id);
+    if (veiculo.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    adicionarLink.adicionarLink(veiculo.get());
+    return ResponseEntity.ok(veiculo.get());
+  }
+
+  @PutMapping("/atualizar/{id}")
+  public ResponseEntity<Veiculo> atualizarVeiculo(@PathVariable Long id, @RequestBody Veiculo dadosAtualizados) {
+    Optional<Veiculo> optionalVeiculo = veiculoRepository.findById(id);
+    if (optionalVeiculo.isEmpty()) {
+      return ResponseEntity.notFound().build();
     }
 
-    @GetMapping
-    public List<Veiculo> listarVeiculos() {
-        return veiculoRepository.findAll();
+    Veiculo veiculo = optionalVeiculo.get();
+    veiculo.setPlaca(dadosAtualizados.getPlaca());
+    veiculo.setModelo(dadosAtualizados.getModelo());
+    veiculo.setMarca(dadosAtualizados.getMarca());
+    veiculo.setCor(dadosAtualizados.getCor());
+    veiculo.setAnoFabricacao(dadosAtualizados.getAnoFabricacao());
+
+    Veiculo veiculoAtualizado = veiculoRepository.save(veiculo);
+    adicionarLink.adicionarLink(veiculoAtualizado);
+    return ResponseEntity.ok(veiculoAtualizado);
+  }
+
+  @DeleteMapping("/deletar/{id}")
+  public ResponseEntity<Void> deletarVeiculo(@PathVariable Long id) {
+    Optional<Veiculo> veiculo = veiculoRepository.findById(id);
+    if (veiculo.isEmpty()) {
+      return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/{id}")
-    public Optional<Veiculo> obterVeiculo(@PathVariable Long id) {
-        return veiculoRepository.findById(id);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletarVeiculo(@PathVariable Long id) {
-        veiculoRepository.deleteById(id);
-    }
-
-    @PutMapping("/{id}")
-    public Veiculo atualizarVeiculo(@PathVariable Long id, @RequestBody Veiculo dadosAtualizados) {
-        return veiculoRepository.findById(id).map(veiculo -> {
-            veiculo.setPlaca(dadosAtualizados.getPlaca());
-            veiculo.setModelo(dadosAtualizados.getModelo());
-            veiculo.setMarca(dadosAtualizados.getMarca());
-            veiculo.setCor(dadosAtualizados.getCor());
-            veiculo.setAnoFabricacao(dadosAtualizados.getAnoFabricacao());
-            return veiculoRepository.save(veiculo);
-        }).orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
-    }
+    veiculoRepository.delete(veiculo.get());
+    return ResponseEntity.noContent().build();
+  }
 }

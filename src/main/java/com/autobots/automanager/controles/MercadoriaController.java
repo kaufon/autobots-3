@@ -4,14 +4,17 @@ import com.autobots.automanager.entidades.Mercadoria;
 import com.autobots.automanager.entidades.Peca;
 import com.autobots.automanager.repositorios.MercadoriaRepository;
 import com.autobots.automanager.repositorios.PecaRepository;
+import com.autobots.automanager.servicos.AdicionarLinkMercadoriaServico;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/mercadorias")
+@RequestMapping("/mercadoria")
 public class MercadoriaController {
 
   @Autowired
@@ -20,49 +23,78 @@ public class MercadoriaController {
   @Autowired
   private PecaRepository pecaRepository;
 
-  @GetMapping
-  public List<Mercadoria> listarMercadorias() {
-    return mercadoriaRepository.findAll();
-  }
+  @Autowired
+  private AdicionarLinkMercadoriaServico adicionarLink;
 
-  @PostMapping
-  public Mercadoria criar(@RequestBody Mercadoria mercadoria) {
-    if (mercadoria.getPeca() != null && mercadoria.getPeca().getId() != null) {
-      Peca peca = pecaRepository.findById(mercadoria.getPeca().getId())
-          .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
-      mercadoria.setPeca(peca);
-    } else {
-      throw new RuntimeException("Peça é obrigatória");
+  @GetMapping("/listar")
+  public ResponseEntity<List<Mercadoria>> listarMercadorias() {
+    List<Mercadoria> mercadorias = mercadoriaRepository.findAll();
+    if (mercadorias.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
-
-    return mercadoriaRepository.save(mercadoria);
+    adicionarLink.adicionarLink(mercadorias);
+    return ResponseEntity.ok(mercadorias);
   }
 
   @GetMapping("/{id}")
-  public Mercadoria obterMercadoria(@PathVariable Long id) {
-    return mercadoriaRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Mercadoria não encontrada"));
+  public ResponseEntity<Mercadoria> obterMercadoria(@PathVariable Long id) {
+    Optional<Mercadoria> mercadoria = mercadoriaRepository.findById(id);
+    if (mercadoria.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    adicionarLink.adicionarLink(mercadoria.get());
+    return ResponseEntity.ok(mercadoria.get());
   }
 
-  @PutMapping("/{id}")
-  public Mercadoria atualizar(@PathVariable Long id, @RequestBody Mercadoria novaMercadoria) {
-    Mercadoria mercadoria = mercadoriaRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Mercadoria não encontrada"));
+  @PostMapping("/cadastro")
+  public ResponseEntity<Mercadoria> criar(@RequestBody Mercadoria mercadoria) {
+    if (mercadoria.getPeca() == null || mercadoria.getPeca().getId() == null) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    Optional<Peca> peca = pecaRepository.findById(mercadoria.getPeca().getId());
+    if (peca.isEmpty()) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    mercadoria.setPeca(peca.get());
+    Mercadoria nova = mercadoriaRepository.save(mercadoria);
+    adicionarLink.adicionarLink(nova);
+    return ResponseEntity.ok(nova);
+  }
+
+  @PutMapping("/atualizar/{id}")
+  public ResponseEntity<Mercadoria> atualizar(@PathVariable Long id, @RequestBody Mercadoria novaMercadoria) {
+    Optional<Mercadoria> mercadoriaOptional = mercadoriaRepository.findById(id);
+    if (mercadoriaOptional.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    Mercadoria mercadoria = mercadoriaOptional.get();
 
     if (novaMercadoria.getPeca() != null && novaMercadoria.getPeca().getId() != null) {
-      Peca peca = pecaRepository.findById(novaMercadoria.getPeca().getId())
-          .orElseThrow(() -> new RuntimeException("Peça não encontrada"));
-      mercadoria.setPeca(peca);
+      Optional<Peca> peca = pecaRepository.findById(novaMercadoria.getPeca().getId());
+      if (peca.isEmpty()) {
+        return ResponseEntity.badRequest().build();
+      }
+      mercadoria.setPeca(peca.get());
     }
 
     mercadoria.setQuantidade(novaMercadoria.getQuantidade());
     mercadoria.setPrecoUnitario(novaMercadoria.getPrecoUnitario());
 
-    return mercadoriaRepository.save(mercadoria);
+    Mercadoria atualizada = mercadoriaRepository.save(mercadoria);
+    adicionarLink.adicionarLink(atualizada);
+    return ResponseEntity.ok(atualizada);
   }
 
-  @DeleteMapping("/{id}")
-  public void deletar(@PathVariable Long id) {
-    mercadoriaRepository.deleteById(id);
+  @DeleteMapping("/deletar/{id}")
+  public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    Optional<Mercadoria> mercadoria = mercadoriaRepository.findById(id);
+    if (mercadoria.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    mercadoriaRepository.delete(mercadoria.get());
+    return ResponseEntity.noContent().build();
   }
 }

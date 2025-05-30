@@ -2,72 +2,60 @@ package com.autobots.automanager.controles;
 
 import com.autobots.automanager.entidades.Usuario;
 import com.autobots.automanager.repositorios.UsuarioRepository;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.web.bind.annotation.*;
+import com.autobots.automanager.servicos.AdicionarLinkUsuarioServico;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/usuario")
 public class UsuarioController {
 
-  private final UsuarioRepository usuarioRepository;
+  @Autowired
+  private UsuarioRepository usuarioRepository;
 
-  public UsuarioController(UsuarioRepository usuarioRepository) {
-    this.usuarioRepository = usuarioRepository;
-  }
+  @Autowired
+  private AdicionarLinkUsuarioServico adicionarLink;
 
-  @GetMapping
-  public CollectionModel<EntityModel<Usuario>> listarUsuarios() {
-    List<EntityModel<Usuario>> usuarios = usuarioRepository.findAll().stream()
-        .map(usuario -> EntityModel.of(usuario,
-            WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).obterUsuario(usuario.getId()))
-                .withSelfRel(),
-            WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuarios())
-                .withRel("usuarios")))
-        .collect(Collectors.toList());
-
-    return CollectionModel.of(usuarios,
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuarios()).withSelfRel());
+  @GetMapping("/listar")
+  public ResponseEntity<List<Usuario>> listarUsuarios() {
+    List<Usuario> usuarios = usuarioRepository.findAll();
+    if (usuarios.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+    adicionarLink.adicionarLink(usuarios);
+    return ResponseEntity.ok(usuarios);
   }
 
   @GetMapping("/{id}")
-  public EntityModel<Usuario> obterUsuario(@PathVariable Long id) {
-    Usuario usuario = usuarioRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-    return EntityModel.of(usuario,
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).obterUsuario(id)).withSelfRel(),
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuarios())
-            .withRel("usuarios"));
+  public ResponseEntity<Usuario> obterUsuario(@PathVariable Long id) {
+    Optional<Usuario> usuario = usuarioRepository.findById(id);
+    if (usuario.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    adicionarLink.adicionarLink(usuario.get());
+    return ResponseEntity.ok(usuario.get());
   }
 
-  @PostMapping
-  public ResponseEntity<EntityModel<Usuario>> criarUsuario(@RequestBody Usuario usuario) {
+  @PostMapping("/cadastro")
+  public ResponseEntity<Usuario> criarUsuario(@RequestBody Usuario usuario) {
     Usuario novoUsuario = usuarioRepository.save(usuario);
-
-    EntityModel<Usuario> usuarioModel = EntityModel.of(novoUsuario,
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).obterUsuario(novoUsuario.getId()))
-            .withSelfRel(),
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuarios())
-            .withRel("usuarios"));
-
-    return ResponseEntity
-        .created(WebMvcLinkBuilder
-            .linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).obterUsuario(novoUsuario.getId())).toUri())
-        .body(usuarioModel);
+    adicionarLink.adicionarLink(novoUsuario);
+    return ResponseEntity.ok(novoUsuario);
   }
 
-  @PutMapping("/{id}")
-  public ResponseEntity<EntityModel<Usuario>> atualizarUsuario(@PathVariable Long id,
-      @RequestBody Usuario usuarioAtualizado) {
-    Usuario usuario = usuarioRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+  @PutMapping("/atualizar/{id}")
+  public ResponseEntity<Usuario> atualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuarioAtualizado) {
+    Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
+    if (usuarioOptional.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
 
+    Usuario usuario = usuarioOptional.get();
     usuario.setNome(usuarioAtualizado.getNome());
     usuario.setEmail(usuarioAtualizado.getEmail());
     usuario.setSenha(usuarioAtualizado.getSenha());
@@ -75,22 +63,18 @@ public class UsuarioController {
     usuario.setEmpresa(usuarioAtualizado.getEmpresa());
 
     Usuario usuarioSalvo = usuarioRepository.save(usuario);
-
-    EntityModel<Usuario> usuarioModel = EntityModel.of(usuarioSalvo,
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).obterUsuario(usuarioSalvo.getId()))
-            .withSelfRel(),
-        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UsuarioController.class).listarUsuarios())
-            .withRel("usuarios"));
-
-    return ResponseEntity.ok(usuarioModel);
+    adicionarLink.adicionarLink(usuarioSalvo);
+    return ResponseEntity.ok(usuarioSalvo);
   }
 
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/deletar/{id}")
   public ResponseEntity<Void> deletarUsuario(@PathVariable Long id) {
-    Usuario usuario = usuarioRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    Optional<Usuario> usuario = usuarioRepository.findById(id);
+    if (usuario.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
 
-    usuarioRepository.delete(usuario);
+    usuarioRepository.delete(usuario.get());
     return ResponseEntity.noContent().build();
   }
 }

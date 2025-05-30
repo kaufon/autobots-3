@@ -2,46 +2,77 @@ package com.autobots.automanager.controles;
 
 import com.autobots.automanager.entidades.Servico;
 import com.autobots.automanager.repositorios.ServicoRepository;
+import com.autobots.automanager.servicos.AdicionarLinkServicoServico;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/servicos")
+@RequestMapping("/servico")
 public class ServicoController {
 
-    @Autowired
-    private ServicoRepository servicoRepository;
+  @Autowired
+  private ServicoRepository servicoRepository;
 
-    @PostMapping
-    public Servico criarServico(@RequestBody Servico servico) {
-        return servicoRepository.save(servico);
+  @Autowired
+  private AdicionarLinkServicoServico adicionarLink;
+
+  @PostMapping("/cadastro")
+  public ResponseEntity<Servico> criarServico(@RequestBody Servico servico) {
+    Servico novoServico = servicoRepository.save(servico);
+    adicionarLink.adicionarLink(novoServico);
+    return ResponseEntity.ok(novoServico);
+  }
+
+  @GetMapping("/listar")
+  public ResponseEntity<List<Servico>> listarServicos() {
+    List<Servico> servicos = servicoRepository.findAll();
+    if (servicos.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+    adicionarLink.adicionarLink(servicos);
+    return ResponseEntity.ok(servicos);
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<Servico> obterServico(@PathVariable Long id) {
+    Optional<Servico> servico = servicoRepository.findById(id);
+    if (servico.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    adicionarLink.adicionarLink(servico.get());
+    return ResponseEntity.ok(servico.get());
+  }
+
+  @PutMapping("/atualizar/{id}")
+  public ResponseEntity<Servico> atualizarServico(@PathVariable Long id, @RequestBody Servico dadosAtualizados) {
+    Optional<Servico> servicoOptional = servicoRepository.findById(id);
+    if (servicoOptional.isEmpty()) {
+      return ResponseEntity.notFound().build();
     }
 
-    @GetMapping
-    public List<Servico> listarServicos() {
-        return servicoRepository.findAll();
+    Servico servico = servicoOptional.get();
+    servico.setNome(dadosAtualizados.getNome());
+    servico.setDescricao(dadosAtualizados.getDescricao());
+    servico.setPreco(dadosAtualizados.getPreco());
+
+    Servico atualizado = servicoRepository.save(servico);
+    adicionarLink.adicionarLink(atualizado);
+    return ResponseEntity.ok(atualizado);
+  }
+
+  @DeleteMapping("/deletar/{id}")
+  public ResponseEntity<Void> deletarServico(@PathVariable Long id) {
+    Optional<Servico> servico = servicoRepository.findById(id);
+    if (servico.isEmpty()) {
+      return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/{id}")
-    public Optional<Servico> obterServico(@PathVariable Long id) {
-        return servicoRepository.findById(id);
-    }
-
-    @PutMapping("/{id}")
-    public Servico atualizarServico(@PathVariable Long id, @RequestBody Servico dadosAtualizados) {
-        return servicoRepository.findById(id).map(servico -> {
-            servico.setNome(dadosAtualizados.getNome());
-            servico.setDescricao(dadosAtualizados.getDescricao());
-            servico.setPreco(dadosAtualizados.getPreco());
-            return servicoRepository.save(servico);
-        }).orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletarServico(@PathVariable Long id) {
-        servicoRepository.deleteById(id);
-    }
+    servicoRepository.delete(servico.get());
+    return ResponseEntity.noContent().build();
+  }
 }
