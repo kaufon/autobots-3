@@ -3,7 +3,7 @@ POST http://localhost:8080/usuario/cadastro
 Content-Type: application/json
 
 {
-  "id": 1,
+  "id": 2,
   "nome": "João da Silva",
   "nomeSocial": "João da Silva",
   "dataNascimento": "1990-01-01",
@@ -13,7 +13,7 @@ Content-Type: application/json
       "id": 2,
       "tipo": "CPF",
       "dataEmissao": "2020-01-01",
-      "numero": "1234567890"
+      "numero": "2334567890"
     }
   ],
   "endereco": {
