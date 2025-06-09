@@ -1,35 +1,48 @@
 package com.autobots.automanager.servicos;
 
-import java.util.List;
+import java.util.Set;
 
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.autobots.automanager.controles.ServicoController;
 import com.autobots.automanager.entidades.Servico;
 
-@Component
-public class AdicionarLinkServicoServico implements AdicionarLinkServico<Servico> {
 
+@Service
+public class AdicionarLinkServicoServico implements AdicionarLinkServico<Servico> {
   @Override
-  public void adicionarLink(List<Servico> clientes) {
-    for (Servico cliente : clientes) {
-      long id = cliente.getId();
-      Link linkProprio = WebMvcLinkBuilder
-          .linkTo(WebMvcLinkBuilder.methodOn(ServicoController.class).obterServico(id))
-          .withSelfRel();
-      cliente.add(linkProprio);
+  public void adicionarLink(Set<Servico> servicos) {
+    for (Servico servico : servicos) {
+      adicionarLink(servico);
     }
   }
 
   @Override
-  public void adicionarLink(Servico cliente) {
-    Link linkProprio = WebMvcLinkBuilder
+  public void adicionarLink(Servico servico) {
+    var linkObter = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(ServicoController.class)
+            .obterServico(servico.getId()))
+        .withRel("obter servico");
+    var linkObterTodos = WebMvcLinkBuilder
         .linkTo(WebMvcLinkBuilder
             .methodOn(ServicoController.class)
             .listarServicos())
-        .withRel("servicos");
-    cliente.add(linkProprio);
+        .withRel("obter todos os servicos");
+    var linkCadastrar = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(ServicoController.class)
+            .criarServico(null))
+        .withRel("cadastrar servico");
+    var linkExcluir = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(ServicoController.class)
+            .deletarServico(null))
+        .withRel("excluir servico");
+    servico.add(linkObter);
+    servico.add(linkObterTodos);
+    servico.add(linkCadastrar);
+    servico.add(linkExcluir);
   }
 }

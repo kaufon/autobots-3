@@ -3,11 +3,13 @@ package com.autobots.automanager.controles;
 import com.autobots.automanager.entidades.Veiculo;
 import com.autobots.automanager.repositorios.VeiculoRepository;
 import com.autobots.automanager.servicos.AdicionarLinkVeiculoServico;
+import com.autobots.automanager.servicos.AtualizaVeiculoServico;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +22,9 @@ public class VeiculoController {
 
   @Autowired
   private AdicionarLinkVeiculoServico adicionarLink;
+
+  @Autowired
+  private AtualizaVeiculoServico atualizaVeiculoServico;
 
   @PostMapping("/cadastro")
   public ResponseEntity<Veiculo> criarVeiculo(@RequestBody Veiculo veiculo) {
@@ -34,7 +39,7 @@ public class VeiculoController {
     if (veiculos.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    adicionarLink.adicionarLink(veiculos);
+    adicionarLink.adicionarLink(new HashSet<>(veiculos));
     return ResponseEntity.ok(veiculos);
   }
 
@@ -56,12 +61,7 @@ public class VeiculoController {
     }
 
     Veiculo veiculo = optionalVeiculo.get();
-    veiculo.setPlaca(dadosAtualizados.getPlaca());
-    veiculo.setModelo(dadosAtualizados.getModelo());
-    veiculo.setMarca(dadosAtualizados.getMarca());
-    veiculo.setCor(dadosAtualizados.getCor());
-    veiculo.setAnoFabricacao(dadosAtualizados.getAnoFabricacao());
-
+    atualizaVeiculoServico.atualizar(veiculo, dadosAtualizados);
     Veiculo veiculoAtualizado = veiculoRepository.save(veiculo);
     adicionarLink.adicionarLink(veiculoAtualizado);
     return ResponseEntity.ok(veiculoAtualizado);

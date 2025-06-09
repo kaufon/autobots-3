@@ -1,6 +1,6 @@
 package com.autobots.automanager.servicos;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -13,7 +13,7 @@ import com.autobots.automanager.entidades.Venda;
 public class AdicionarLinkVendaServico implements AdicionarLinkServico<Venda> {
 
   @Override
-  public void adicionarLink(List<Venda> clientes) {
+  public void adicionarLink(Set<Venda> clientes) {
     for (Venda cliente : clientes) {
       long id = cliente.getId();
       Link linkProprio = WebMvcLinkBuilder

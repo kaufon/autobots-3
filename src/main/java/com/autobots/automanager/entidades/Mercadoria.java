@@ -1,37 +1,39 @@
 package com.autobots.automanager.entidades;
 
-import javax.persistence.*;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 import org.springframework.hateoas.RepresentationModel;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Table(name = "mercadorias")
 public class Mercadoria extends RepresentationModel<Mercadoria> {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private Integer quantidade;
-    private Double precoUnitario;
-
-    @ManyToOne
-    @JoinColumn(name = "peca_id")
-    private Peca peca;
-
-    @ManyToOne
-    @JoinColumn(name = "venda_id")
-    @JsonIgnore
-    private Venda venda;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	@Column(nullable = false)
+	private Date validade;
+	@Column(nullable = false)
+	private Date fabricao;
+	@Column(nullable = false)
+	private Date cadastro;
+	@Column(nullable = false)
+	private String nome;
+	@Column(nullable = false)
+	private long quantidade;
+	@Column(nullable = false)
+	private double valor;
+	@Column()
+	private String descricao;
 }

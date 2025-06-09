@@ -1,15 +1,15 @@
 package com.autobots.automanager.controles;
 
 import com.autobots.automanager.entidades.Mercadoria;
-import com.autobots.automanager.entidades.Peca;
 import com.autobots.automanager.repositorios.MercadoriaRepository;
-import com.autobots.automanager.repositorios.PecaRepository;
 import com.autobots.automanager.servicos.AdicionarLinkMercadoriaServico;
+import com.autobots.automanager.servicos.AtualizaMercadoriaServico;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +21,10 @@ public class MercadoriaController {
   private MercadoriaRepository mercadoriaRepository;
 
   @Autowired
-  private PecaRepository pecaRepository;
+  private AdicionarLinkMercadoriaServico adicionarLink;
 
   @Autowired
-  private AdicionarLinkMercadoriaServico adicionarLink;
+  private AtualizaMercadoriaServico atualizaMercadoriaServico;
 
   @GetMapping("/listar")
   public ResponseEntity<List<Mercadoria>> listarMercadorias() {
@@ -32,7 +32,7 @@ public class MercadoriaController {
     if (mercadorias.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    adicionarLink.adicionarLink(mercadorias);
+    adicionarLink.adicionarLink(new HashSet<>(mercadorias));
     return ResponseEntity.ok(mercadorias);
   }
 
@@ -48,16 +48,6 @@ public class MercadoriaController {
 
   @PostMapping("/cadastro")
   public ResponseEntity<Mercadoria> criar(@RequestBody Mercadoria mercadoria) {
-    if (mercadoria.getPeca() == null || mercadoria.getPeca().getId() == null) {
-      return ResponseEntity.badRequest().build();
-    }
-
-    Optional<Peca> peca = pecaRepository.findById(mercadoria.getPeca().getId());
-    if (peca.isEmpty()) {
-      return ResponseEntity.badRequest().build();
-    }
-
-    mercadoria.setPeca(peca.get());
     Mercadoria nova = mercadoriaRepository.save(mercadoria);
     adicionarLink.adicionarLink(nova);
     return ResponseEntity.ok(nova);
@@ -72,16 +62,7 @@ public class MercadoriaController {
 
     Mercadoria mercadoria = mercadoriaOptional.get();
 
-    if (novaMercadoria.getPeca() != null && novaMercadoria.getPeca().getId() != null) {
-      Optional<Peca> peca = pecaRepository.findById(novaMercadoria.getPeca().getId());
-      if (peca.isEmpty()) {
-        return ResponseEntity.badRequest().build();
-      }
-      mercadoria.setPeca(peca.get());
-    }
-
-    mercadoria.setQuantidade(novaMercadoria.getQuantidade());
-    mercadoria.setPrecoUnitario(novaMercadoria.getPrecoUnitario());
+    atualizaMercadoriaServico.atualizar(mercadoria, novaMercadoria);
 
     Mercadoria atualizada = mercadoriaRepository.save(mercadoria);
     adicionarLink.adicionarLink(atualizada);

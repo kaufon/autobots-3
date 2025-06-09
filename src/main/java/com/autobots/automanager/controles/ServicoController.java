@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class ServicoController {
     if (servicos.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    adicionarLink.adicionarLink(servicos);
+    adicionarLink.adicionarLink(new HashSet<>(servicos));
     return ResponseEntity.ok(servicos);
   }
 
@@ -58,7 +59,7 @@ public class ServicoController {
     Servico servico = servicoOptional.get();
     servico.setNome(dadosAtualizados.getNome());
     servico.setDescricao(dadosAtualizados.getDescricao());
-    servico.setPreco(dadosAtualizados.getPreco());
+    servico.setValor(dadosAtualizados.getValor());
 
     Servico atualizado = servicoRepository.save(servico);
     adicionarLink.adicionarLink(atualizado);

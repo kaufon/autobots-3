@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +20,7 @@ public class VendaController {
   private VendaRepository vendaRepository;
 
   @Autowired
-  private AdicionarLinkVendaServico linkService;
+  private AdicionarLinkVendaServico adicionarLink;
 
   @GetMapping("/listar")
   public ResponseEntity<List<Venda>> listarVendas() {
@@ -29,14 +30,14 @@ public class VendaController {
       return ResponseEntity.noContent().build();
     }
 
-    vendas.forEach(linkService::adicionarLink);
+    adicionarLink.adicionarLink(new HashSet<>(vendas));
     return ResponseEntity.ok(vendas);
   }
 
   @PostMapping("/cadastro")
   public ResponseEntity<Venda> criar(@RequestBody Venda venda) {
     Venda novaVenda = vendaRepository.save(venda);
-    linkService.adicionarLink(novaVenda);
+    adicionarLink.adicionarLink(novaVenda);
     return ResponseEntity.ok(novaVenda);
   }
 
@@ -44,7 +45,7 @@ public class VendaController {
   public ResponseEntity<Venda> obterVenda(@PathVariable Long id) {
     return vendaRepository.findById(id)
         .map(venda -> {
-          linkService.adicionarLink(venda);
+          adicionarLink.adicionarLink(venda);
           return ResponseEntity.ok(venda);
         })
         .orElse(ResponseEntity.notFound().build());
@@ -54,13 +55,13 @@ public class VendaController {
   public ResponseEntity<Venda> atualizar(@PathVariable Long id, @RequestBody Venda novaVenda) {
     return vendaRepository.findById(id)
         .map(venda -> {
-          venda.setData(novaVenda.getData());
-          venda.setValorTotal(novaVenda.getValorTotal());
-          venda.setMercadorias(novaVenda.getMercadorias());
-          venda.setVeiculos(novaVenda.getVeiculos());
+          // venda.setData(novaVenda.getData());
+          // venda.setValorTotal(novaVenda.getValorTotal());
+          // venda.setMercadorias(novaVenda.getMercadorias());
+          // venda.setVeiculos(novaVenda.getVeiculos());
 
           Venda vendaAtualizada = vendaRepository.save(venda);
-          linkService.adicionarLink(vendaAtualizada);
+          adicionarLink.adicionarLink(vendaAtualizada);
           return ResponseEntity.ok(vendaAtualizada);
         })
         .orElse(ResponseEntity.notFound().build());

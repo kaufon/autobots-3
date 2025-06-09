@@ -3,11 +3,13 @@ package com.autobots.automanager.controles;
 import com.autobots.automanager.entidades.Usuario;
 import com.autobots.automanager.repositorios.UsuarioRepository;
 import com.autobots.automanager.servicos.AdicionarLinkUsuarioServico;
+import com.autobots.automanager.servicos.AtualizaUsuarioServico;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,13 +23,16 @@ public class UsuarioController {
   @Autowired
   private AdicionarLinkUsuarioServico adicionarLink;
 
+  @Autowired
+  private AtualizaUsuarioServico atualizaUsuarioServico;
+
   @GetMapping("/listar")
   public ResponseEntity<List<Usuario>> listarUsuarios() {
     List<Usuario> usuarios = usuarioRepository.findAll();
     if (usuarios.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    adicionarLink.adicionarLink(usuarios);
+    adicionarLink.adicionarLink(new HashSet<>(usuarios));
     return ResponseEntity.ok(usuarios);
   }
 
@@ -56,12 +61,7 @@ public class UsuarioController {
     }
 
     Usuario usuario = usuarioOptional.get();
-    usuario.setNome(usuarioAtualizado.getNome());
-    usuario.setEmail(usuarioAtualizado.getEmail());
-    usuario.setSenha(usuarioAtualizado.getSenha());
-    usuario.setTipo(usuarioAtualizado.getTipo());
-    usuario.setEmpresa(usuarioAtualizado.getEmpresa());
-
+    atualizaUsuarioServico.atualizar(usuario, usuarioAtualizado);
     Usuario usuarioSalvo = usuarioRepository.save(usuario);
     adicionarLink.adicionarLink(usuarioSalvo);
     return ResponseEntity.ok(usuarioSalvo);

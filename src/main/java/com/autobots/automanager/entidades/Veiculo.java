@@ -1,43 +1,44 @@
 package com.autobots.automanager.entidades;
 
-import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.OneToMany;
 
 import org.springframework.hateoas.RepresentationModel;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.autobots.automanager.enumeracoes.TipoVeiculo;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
-@Builder
+@EqualsAndHashCode(exclude = { "proprietario", "vendas" })
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "veiculos")
 public class Veiculo extends RepresentationModel<Veiculo> {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  private String placa;
-  private String modelo;
-  private String marca;
-  private String cor;
-
-  private LocalDate anoFabricacao;
-
-  @ManyToOne
-  @JsonIgnore
-  private Venda venda;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	@Column(nullable = false)
+	private TipoVeiculo tipo;
+	@Column(nullable = false)
+	private String modelo;
+	@Column(nullable = false)
+	private String placa;
+	@ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
+	private Usuario proprietario;
+	@OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
+	private Set<Venda> vendas = new HashSet<>();
 }

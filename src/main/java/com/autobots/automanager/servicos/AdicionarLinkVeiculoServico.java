@@ -1,35 +1,50 @@
 package com.autobots.automanager.servicos;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.autobots.automanager.controles.VeiculoController;
 import com.autobots.automanager.entidades.Veiculo;
 
-@Component
+
+@Service
 public class AdicionarLinkVeiculoServico implements AdicionarLinkServico<Veiculo> {
 
   @Override
-  public void adicionarLink(List<Veiculo> clientes) {
-    for (Veiculo cliente : clientes) {
-      long id = cliente.getId();
-      Link linkProprio = WebMvcLinkBuilder
-          .linkTo(WebMvcLinkBuilder.methodOn(VeiculoController.class).obterVeiculo(id))
-          .withSelfRel();
-      cliente.add(linkProprio);
+  public void adicionarLink(Set<Veiculo> veiculos) {
+    for (Veiculo veiculo : veiculos) {
+      adicionarLink(veiculo);
     }
   }
 
   @Override
-  public void adicionarLink(Veiculo cliente) {
-    Link linkProprio = WebMvcLinkBuilder
+  public void adicionarLink(Veiculo veiculo) {
+    Link linkObter = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(VeiculoController.class)
+            .obterVeiculo(veiculo.getId()))
+        .withRel("obter veiculo");
+    Link linkObterTodos = WebMvcLinkBuilder
         .linkTo(WebMvcLinkBuilder
             .methodOn(VeiculoController.class)
             .listarVeiculos())
-        .withRel("veiculos");
-    cliente.add(linkProprio);
+        .withRel("obter todos os veiculos");
+    Link linkCadastrar = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(VeiculoController.class)
+            .criarVeiculo(null))
+        .withRel("cadastrar veiculo");
+    Link linkExcluir = WebMvcLinkBuilder
+        .linkTo(WebMvcLinkBuilder
+            .methodOn(VeiculoController.class)
+            .deletarVeiculo(null))
+        .withRel("excluir veiculo");
+    veiculo.add(linkObter);
+    veiculo.add(linkObterTodos);
+    veiculo.add(linkCadastrar);
+    veiculo.add(linkExcluir);
   }
 }

@@ -1,79 +1,91 @@
 package com.autobots.automanager.controles;
 
-import com.autobots.automanager.entidades.Empresa;
-import com.autobots.automanager.repositorios.EmpresaRepository;
-import com.autobots.automanager.servicos.AdicionarLinkEmpresaServico;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.autobots.automanager.entidades.Empresa;
+import com.autobots.automanager.repositorios.EmpresaRepository;
+import com.autobots.automanager.servicos.AdicionarLinkEmpresaServico;
+import com.autobots.automanager.servicos.AtualizaEmpresaServico;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 @RestController
-@RequestMapping("/empresa")
 public class EmpresaController {
+  @Autowired
+  private EmpresaRepository repositorio;
 
   @Autowired
-  private EmpresaRepository empresaRepository;
+  private AdicionarLinkEmpresaServico adicionaLinkEmpresaServico;
 
   @Autowired
-  private AdicionarLinkEmpresaServico adicionarLink;
+  private AtualizaEmpresaServico atualizaEmpresaServico;
+
+  @PostMapping("/empresa/cadastrar")
+  public ResponseEntity<?> cadastrarEmpresa(@RequestBody Empresa empresa) {
+    // Optional<Empresa> empresaExistente = repositorio.findById(empresa.getId());
+    // if (empresaExistente.isPresent()) {
+    // return new ResponseEntity<>(HttpStatus.CONFLICT);
+    // }
+    repositorio.save(empresa);
+    return new ResponseEntity<>(HttpStatus.CREATED);
+  }
 
   @GetMapping("/empresas")
-  public ResponseEntity<List<Empresa>> listarEmpresas() {
-    List<Empresa> empresas = empresaRepository.findAll();
+  public ResponseEntity<List<Empresa>> obterEmpresas() {
+    List<Empresa> empresas = repositorio.findAll();
     if (empresas.isEmpty()) {
-      return ResponseEntity.noContent().build();
+      ResponseEntity<List<Empresa>> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      return resposta;
+    } else {
+      adicionaLinkEmpresaServico.adicionarLink(new HashSet<>(empresas));
+      ResponseEntity<List<Empresa>> resposta = new ResponseEntity<>(empresas, HttpStatus.OK);
+      return resposta;
     }
-    adicionarLink.adicionarLink(empresas);
-    return ResponseEntity.ok(empresas);
   }
 
   @GetMapping("/empresa/{id}")
-  public ResponseEntity<Empresa> obterEmpresa(@PathVariable Long id) {
-    Optional<Empresa> empresa = empresaRepository.findById(id);
-    if (empresa.isEmpty()) {
-      return ResponseEntity.notFound().build();
+  public ResponseEntity<Empresa> obterEmpresa(@PathVariable long id) {
+    Optional<Empresa> cliente = repositorio.findById(id);
+    if (cliente.isEmpty()) {
+      ResponseEntity<Empresa> resposta = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      return resposta;
+    } else {
+      adicionaLinkEmpresaServico.adicionarLink(cliente.get());
+      return ResponseEntity.status(HttpStatus.OK).body(cliente.get());
     }
-    adicionarLink.adicionarLink(empresa.get());
-    return ResponseEntity.ok(empresa.get());
   }
 
-  @PostMapping("/cadastro")
-  public ResponseEntity<Empresa> criarEmpresa(@RequestBody Empresa empresa) {
-    Empresa novaEmpresa = empresaRepository.save(empresa);
-    adicionarLink.adicionarLink(novaEmpresa);
-    return ResponseEntity.ok(novaEmpresa);
+  @PutMapping("/empresa/atualizar")
+  public ResponseEntity<?> atualizarEmpresa(@RequestBody Empresa empresaAtualizado) {
+    Optional<Empresa> empresa = repositorio.findById(empresaAtualizado.getId());
+    if (empresa.isPresent()) {
+      atualizaEmpresaServico.atualizar(empresa.get(), empresaAtualizado);
+      repositorio.save(empresa.get());
+      return new ResponseEntity<>(HttpStatus.OK);
+    }
+    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
   }
 
-  @DeleteMapping("/deletar/{id}")
-  public ResponseEntity<Void> deletarEmpresa(@PathVariable Long id) {
-    Optional<Empresa> empresa = empresaRepository.findById(id);
-    if (empresa.isEmpty()) {
-      return ResponseEntity.notFound().build();
+  @DeleteMapping("/empresa/excluir")
+  public ResponseEntity<?> excluirEmpresa(@RequestBody Empresa exclusao) {
+    HttpStatus status = HttpStatus.NOT_FOUND;
+    Optional<Empresa> empresa = repositorio.findById(exclusao.getId());
+    if (empresa.isPresent()) {
+      repositorio.delete(empresa.get());
+      status = HttpStatus.OK;
     }
-    empresaRepository.delete(empresa.get());
-    return ResponseEntity.noContent().build();
-  }
-
-  @PutMapping("/atualizar/{id}")
-  public ResponseEntity<Empresa> atualizarEmpresa(@PathVariable Long id, @RequestBody Empresa empresaAtualizada) {
-    Optional<Empresa> empresaOptional = empresaRepository.findById(id);
-    if (empresaOptional.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-
-    Empresa empresaExistente = empresaOptional.get();
-
-    empresaExistente.setNome(empresaAtualizada.getNome());
-    empresaExistente.setNome(empresaAtualizada.getNome());
-    empresaExistente.setTelefone(empresaAtualizada.getTelefone());
-    empresaExistente.setEndereco(empresaAtualizada.getEndereco());
-    empresaExistente.setCnpj(empresaAtualizada.getCnpj());
-    Empresa empresaSalva = empresaRepository.save(empresaExistente);
-    adicionarLink.adicionarLink(empresaSalva);
-    return ResponseEntity.ok(empresaSalva);
+    return new ResponseEntity<>(status);
   }
 }
