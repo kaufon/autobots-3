@@ -6,6 +6,13 @@ Content-Type: application/json
   "id": 2,
   "nome": "João da Silva",
   "nomeSocial": "João da Silva",
+  "empresa": {
+    "id": 1,
+    "razaoSocial": "Empresa 1",
+    "cadastro": "2025-01-01"
+
+  },
+  "perfil": "FUNCIONARIO",
   "dataNascimento": "1990-01-01",
   "dataCadastro": "2000-01-01",
   "documentos": [
@@ -13,7 +20,7 @@ Content-Type: application/json
       "id": 2,
       "tipo": "CPF",
       "dataEmissao": "2020-01-01",
-      "numero": "3334567890"
+      "numero": "0124567890"
     }
   ],
   "endereco": {
@@ -32,7 +39,11 @@ Content-Type: application/json
       "ddd": "11",
       "numero": "99999-9999"
     }
-  ]
+  ],
+  "credencialCodigoBarra":{ 
+    "codigo": 1,
+    "criacao":"2020-01-01"
+  }
 }
 
 ### Obter todos os clientes
