@@ -62,35 +62,4 @@ public class Venda extends RepresentationModel<Venda> {
   @JsonIgnore
   @OneToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
   private Veiculo veiculo;
-
-  @JsonProperty("cliente_id") // Define o nome do campo no JSON
-  public Long getClienteId() {
-    return (cliente != null) ? cliente.getId() : null;
-  }
-
-  @JsonProperty("funcionario_id")
-  public Long getFuncionarioId() {
-    return (funcionario != null) ? funcionario.getId() : null;
-  }
-
-  @JsonProperty("veiculo_id")
-  public Long getVeiculoId() {
-    return (veiculo != null) ? veiculo.getId() : null;
-  }
-
-  @JsonProperty("mercadorias_ids")
-  public Set<Long> getMercadoriasIds() {
-    if (mercadorias == null || mercadorias.isEmpty()) {
-      return null;
-    }
-    return mercadorias.stream().map(Mercadoria::getId).collect(Collectors.toSet());
-  }
-
-  @JsonProperty("servicos_ids")
-  public Set<Long> getServicosIds() {
-    if (servicos == null || servicos.isEmpty()) {
-      return null;
-    }
-    return servicos.stream().map(Servico::getId).collect(Collectors.toSet());
-  }
 }
