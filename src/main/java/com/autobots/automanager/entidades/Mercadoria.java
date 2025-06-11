@@ -39,7 +39,7 @@ public class Mercadoria extends RepresentationModel<Mercadoria> {
 	private double valor;
 	@Column()
 	private String descricao;
-
-  @ManyToOne(mappe)
-  private Set<Venda> vendas;
+  @ManyToOne
+  @JoinColumn(name = "venda_id")
+  private Venda venda;
 }

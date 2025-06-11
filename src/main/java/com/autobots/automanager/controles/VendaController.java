@@ -3,6 +3,8 @@ package com.autobots.automanager.controles;
 import com.autobots.automanager.entidades.Venda;
 import com.autobots.automanager.repositorios.VendaRepository;
 import com.autobots.automanager.servicos.AdicionarLinkVendaServico;
+import com.autobots.automanager.servicos.AtualizaVeiculoServico;
+import com.autobots.automanager.servicos.AtualizaVendaServico;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,9 @@ public class VendaController {
 
   @Autowired
   private VendaRepository vendaRepository;
+
+  @Autowired
+  private AtualizaVendaServico atualizaVendaServico;
 
   @Autowired
   private AdicionarLinkVendaServico adicionarLink;
@@ -37,11 +42,10 @@ public class VendaController {
   @PostMapping("/cadastro")
   public ResponseEntity<Venda> criar(@RequestBody Venda venda) {
     Venda novaVenda = vendaRepository.save(venda);
-    adicionarLink.adicionarLink(novaVenda);
     return ResponseEntity.ok(novaVenda);
   }
 
-  @GetMapping("/obter/{id}")
+  @GetMapping("/{id}")
   public ResponseEntity<Venda> obterVenda(@PathVariable Long id) {
     return vendaRepository.findById(id)
         .map(venda -> {
@@ -55,11 +59,7 @@ public class VendaController {
   public ResponseEntity<Venda> atualizar(@PathVariable Long id, @RequestBody Venda novaVenda) {
     return vendaRepository.findById(id)
         .map(venda -> {
-          // venda.setData(novaVenda.getData());
-          // venda.setValorTotal(novaVenda.getValorTotal());
-          // venda.setMercadorias(novaVenda.getMercadorias());
-          // venda.setVeiculos(novaVenda.getVeiculos());
-
+          atualizaVendaServico.atualizar(venda, novaVenda);
           Venda vendaAtualizada = vendaRepository.save(venda);
           adicionarLink.adicionarLink(vendaAtualizada);
           return ResponseEntity.ok(vendaAtualizada);

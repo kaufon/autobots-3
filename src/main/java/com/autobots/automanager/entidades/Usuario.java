@@ -76,11 +76,7 @@ public class Usuario extends RepresentationModel<Usuario> {
   @JoinColumn(name = "cliente_id")
   private Set<Veiculo> veiculos = new HashSet<>();
 
-  @OneToMany(mappedBy = "cliente")
-  @JsonIgnore
-  private Set<Venda> vendasCliente = new HashSet<>();
-
-  @OneToMany(mappedBy = "funcionario")
-  @JsonIgnore
-  private Set<Venda> vendasFuncionario = new HashSet<>();
+  @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
+  @JoinColumn(name = "cliente_id")
+  private List<Venda> vendas = new ArrayList<>();
 }

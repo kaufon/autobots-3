@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autobots.automanager.entidades.Empresa;
@@ -19,7 +20,6 @@ import com.autobots.automanager.repositorios.EmpresaRepository;
 import com.autobots.automanager.servicos.AdicionarLinkEmpresaServico;
 import com.autobots.automanager.servicos.AtualizaEmpresaServico;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 public class EmpresaController {
@@ -42,7 +42,7 @@ public class EmpresaController {
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
-  @GetMapping("/empresas")
+  @GetMapping("/empresa/listar")
   public ResponseEntity<List<Empresa>> obterEmpresas() {
     List<Empresa> empresas = repositorio.findAll();
     if (empresas.isEmpty()) {
