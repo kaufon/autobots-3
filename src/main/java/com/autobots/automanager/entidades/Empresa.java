@@ -1,5 +1,6 @@
 package com.autobots.automanager.entidades;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.RepresentationModel;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,7 +45,9 @@ public class Empresa extends RepresentationModel<Empresa> {
   private Endereco endereco;
 
   @Column(nullable = true)
-  private Date cadastro;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  @JsonFormat(pattern = "yyyy-MM-dd") 
+  private LocalDate cadastro;
 
   @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
   private Set<Usuario> usuarios = new HashSet<>();
