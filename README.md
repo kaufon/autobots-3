@@ -38,7 +38,7 @@ Abra o projeto em sua IDE preferida, como [IntelliJ IDEA](https://www.jetbrains.
 ### Executar pelo terminal
 1. Navegue até o diretório do projeto:
 ```bash
-cd autobots-4
+cd autobots-3
 ```
 2. Execute o seguinte comando para rodar o projeto:
 ```bash
